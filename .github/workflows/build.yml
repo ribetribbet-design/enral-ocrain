@@ -20,7 +20,17 @@ jobs:
           REPO="${GITHUB_REPOSITORY#*/}"
           APP_URL="https://$OWNER.github.io/$REPO/"
           echo "App URL: $APP_URL"
-          mkdir -p app/src/main/java/com/enral/ocrain
+          mkdir -p app/src/main/java/com/enral/ocrain app/src/main/res/mipmap-xxxhdpi
+          SRC=""
+          for f in icon.png icon.jpg icon.jpeg; do if [ -f "$f" ]; then SRC="$f"; break; fi; done
+          IM=convert
+          if command -v magick >/dev/null 2>&1; then IM=magick; fi
+          OUT=app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          if [ -n "$SRC" ]; then
+            $IM "$SRC[0]" -resize 192x192^ -gravity center -extent 192x192 PNG32:$OUT
+          else
+            $IM -size 192x192 xc:'#4f46e5' PNG32:$OUT
+          fi
           cat > settings.gradle <<'EOF'
           pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
           dependencyResolutionManagement { repositories { google(); mavenCentral() } }
@@ -42,7 +52,7 @@ jobs:
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
             <uses-permission android:name="android.permission.INTERNET"/>
-            <application android:label="Enral Ocrain" android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+            <application android:icon="@mipmap/ic_launcher" android:label="Enral Ocrain" android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
               <activity android:name=".MainActivity" android:exported="true" android:configChanges="orientation|screenSize|keyboardHidden">
                 <intent-filter>
                   <action android:name="android.intent.action.MAIN"/>
